@@ -71,8 +71,6 @@ class TaskController extends Controller
         ]);
         } catch (ValidationException $e) {
 
-        // $data['user_id'] = auth()->id();
-
             return response()->json([
                 'message' => 'All the fields are mandatory',
                 'errors' => $e->errors(),
