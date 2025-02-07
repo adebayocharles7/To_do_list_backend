@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -47,12 +48,49 @@ class UserController extends Controller
             'password' => Hash::make($request->input('password')),
         ]);
         
-        return response()->json(
-            $user, 
-         200);
+        // Dispatch the Registered event
+        event(new Registered($user));
+
+        // return a success response and user data
+        return response()->json([
+            'message' => 'Registration successful',
+            'user' => $user, 
+            200
+        ]);
     }
 
-    public function update(User $users) {
+    public function update(Request $request, User $user) {
+        // Validate the incoming request
+        $validator = Validator::make($request->all(), [
+            'first_name' => "sometimes|required|string|max:255",
+            'last_name' => "sometimes|required|string|max:255",
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
+            'username' => "sometimes|required|string|max:255|unique:users,username," . $user->id,
+            'password' => "sometimes|required|string|min:8|confirmed", // password_confirmation
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'error' => $validator->messages(),
+            ], 422);
+        }
+
+        // Update the user
+        $user->update($request->only(['first_name', 'last_name', 'email', 'username', 'password']));
+
+        // If password is provided, hash it before saving
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->input('password'));
+            $user->save();
+        }
+
+        // Return a success response and updated user data
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => new UserResource($user),
+        ], 200);
     }
+
+    
 }
