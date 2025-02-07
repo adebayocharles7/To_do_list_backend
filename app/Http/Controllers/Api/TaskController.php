@@ -186,7 +186,7 @@ public function updateTask(Request $request, $task_id) {
     $task->update([
         'title' => $request->title,
         'description' => $request->description,
-        'status' => $request->status,
+        'completed' => $request->completed,
         'due_date' => $request->due_date,
     ]);
 
@@ -202,7 +202,7 @@ public function updateTask(Request $request, $task_id) {
     $user = $request->user();
 
     // Find the task by ID belonging to the authenticated user
-    $task = Task::find($id)
+    $task = Task::where('id', $id)
                 ->where('user_id', $user->id) //Ensures the task belongs to the user
                 ->first();
 
