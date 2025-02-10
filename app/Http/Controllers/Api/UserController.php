@@ -49,7 +49,7 @@ class UserController extends Controller
         ]);
         
         // Dispatch the Registered event
-        event(new Registered($user));
+        //event(new Registered($user));
 
         // return a success response and user data
         return response()->json([
